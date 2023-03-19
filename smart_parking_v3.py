@@ -110,14 +110,16 @@ def picking(name, row, picking_time, env, robot):
                 start = env.now
                 yield req            
                 random_num = random.randint(0,2)
-                #ranks = cumulative_rank()
+                ranks = cumulative_rank()
 
-                #robot_row = int(ranks[random_num])
-                robot_row = int(random.randint(1,n_rows)) #--- standard parking (hash out above two lines)
+                robot_row = int(ranks[random_num])
+                #robot_row = int(random.randint(1,n_rows)) #--- standard parking (hash out above two lines)
                 #robot_row = int(ps[random_num])
                 row_diff = abs(robot_row - row)
                 spaces_to_move = (row_diff+i)*2
                 yield env.timeout(spaces_to_move*robot_speed)
+                global robot_travel
+                robot_travel = robot_travel+spaces_to_move
                 
                 #print('%s has been served by the robot in %.1f seconds.' % (name, env.now - start))
 
@@ -142,10 +144,10 @@ print('Allocation of Parking Spaces to Robots and their performance')
 rows = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20] #Add as many rows as needed
 n_rows = len(rows) #number of rows
 
-pickers = ['picker1','picker2','picker3','picker4','picker5'] #Add as many pickers as needed
+pickers = ['picker1','picker2','picker3'] #Add as many pickers as needed
 n_pickers = len(pickers)#number of pickers stored
 
-time_of_picker = [2,2,2,2,2]#time taken by each of the pickers to move form one node to another - can be different from one another (could use random.randint)
+time_of_picker = [2,2,2]#time taken by each of the pickers to move form one node to another - can be different from one another (could use random.randint)
 pick_points = [1,2,3,4,5,6,7,8,9,10]#Add as many WayPoints in each row
 n_pick_points = len(pick_points)#number of WayPoints in each row
 
@@ -154,10 +156,10 @@ rank = np.zeros(((n_rows), len(pickers)))#Empty list to store rank allocations t
 
 list_sum_of_rank=[] #Empty list to store rank aggregate values
 robot_speed = 0.5 #Specify time taken for robot movement from one WayPoint to another
-
-n_exp = 10 #Specify Number of test simulations in the experiment
+robot_travel = 0
+n_exp = 100 #Specify Number of test simulations in the experiment
 tt = 0 #Variable to store Total Time of Experiments
-
+rt = 0
 make_video = False
 
 median_row = 0 #storage variable of parking space
@@ -187,7 +189,9 @@ for n in range(n_exp):
         
         print("Total task completion time: {}".format(env.now))
         tt = tt + env.now
+        rt = rt + robot_travel
         picker_rows = []
+        robot_travel = 0
         
     elif rank_type == 2 :
         cumulative_rank()
@@ -204,13 +208,17 @@ for n in range(n_exp):
         
         print("Total task completion time: {}".format(env.now))
         tt = tt + env.now
+        rt = rt + robot_travel
         picker_rows = []
+        robot_travel = 0
 
     else:
         print("Enter Admissible Rank Type")
 
 at = tt/n_exp #Average Task Completion Time
+art = rt/n_exp
 #print(tt)
 print('Average Task Completion Time is %d' %at)
+print('Average Robot Travel Time is %d' %art)
 
     
